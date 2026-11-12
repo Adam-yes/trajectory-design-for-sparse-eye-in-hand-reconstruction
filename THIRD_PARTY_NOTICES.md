@@ -26,6 +26,10 @@ redistribution or publication.
 
 ## What is not included
 
-No trained model weights, no font files, no captured imagery and no CAD assets are
-bundled. The adapters never download weights; they load a local checkpoint whose
-SHA-256 you supply explicitly.
+No trained model weights, no font files, no camera images of the scans, no point clouds
+and no CAD assets are bundled. The adapters never download weights; they load a local
+checkpoint whose SHA-256 you supply explicitly.
+
+`study/` contains the result tables of the study and four rendered views of registered
+reconstructions that are used in one figure of the article. They fall under the same
+licensing status as the rest of the repository.

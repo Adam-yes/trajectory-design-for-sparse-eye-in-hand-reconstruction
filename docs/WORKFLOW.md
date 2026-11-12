@@ -65,9 +65,12 @@ supported = supported_f1_length_points(rows)
 geometry = sightline_geometry(rows, focal_height_m=.04)
 ```
 
-Pick `min_f1` and `max_hd95_m` from the tolerance of the downstream task rather than by
-tuning. Tasks that act on object boundaries are sensitive to the tail of the surface
-error, which is what HD95 tracks; a coarse collision map is not. Comparing `front` with
+Pick `min_f1` and `max_hd95_m` from the tolerance of the downstream task. HD95 is the
+larger of two directional 95th-percentile distances. When the reconstruction contains
+little stray geometry, as in the context-enabled settings of the study, it is set by
+reference surface that has no reconstructed point nearby, so it measures how far the
+coverage gaps extend. A task that needs the whole cell covered should bound it.
+Comparing `front` with
 `supported` shows which runs a single weighted objective could never return, so a run
 that is nondominated but unsupported is one that scalarizing would silently discard.
 

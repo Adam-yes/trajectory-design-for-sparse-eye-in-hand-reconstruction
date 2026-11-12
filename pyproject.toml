@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eyeinhand"
-version = "0.3.0"
-description = "Trajectory design and evaluation for sparse eye-in-hand reconstruction"
+version = "0.4.0"
+description = "Trajectory design and evaluation for sparse eye-in-hand 3D reconstruction of a known workcell"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24", "scipy>=1.10", "Pillow>=10"]

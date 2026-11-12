@@ -1,224 +1,176 @@
 <div align="center">
 
-# Trajectory Design for Sparse Eye-in-Hand Reconstruction under Workcell Constraints
+# Trajectory Design for Sparse Eye-in-Hand 3D Reconstruction of a Known Workcell
 
+Which scan should a wrist-mounted camera drive when the cell is known in advance?<br>
+Pipeline code, result tables and the complete analysis of a 10,000-configuration simulation study.
 
-Search an ellipsoidal scan family, keep only what a manipulator can actually execute,
-reconstruct from sparse views, and score the result against known geometry.
-
-[![tests](../../actions/workflows/tests.yml/badge.svg)](../../actions/workflows/tests.yml)
-[![python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776ab)](pyproject.toml)
+[![tests](https://github.com/Adam-yes/trajectory-design-for-sparse-eye-in-hand-reconstruction/actions/workflows/tests.yml/badge.svg)](https://github.com/Adam-yes/trajectory-design-for-sparse-eye-in-hand-reconstruction/actions/workflows/tests.yml)
+[![python](https://img.shields.io/badge/python-3.10%20to%203.13-3776ab)](pyproject.toml)
 [![ros](https://img.shields.io/badge/ROS%202-MoveIt%202-22314e)](integrations/)
 [![status](https://img.shields.io/badge/status-research%20code-orange)](docs/VALIDATION.md)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/overview-dark.png">
   <img src="assets/overview-light.png" width="100%"
-       alt="Left: an ellipsoidal viewing manifold with three scan arcs and the six geometric parameters. Right: the four processing stages, from collision-checked acquisition through VGGT reconstruction and reference-assisted registration to geometric evaluation.">
+       alt="Left: an ellipsoidal viewing manifold with three scan arcs and the six scan parameters. Right: the four processing stages, from collision-checked acquisition through VGGT reconstruction and reference-assisted registration to geometric evaluation.">
 </picture>
 
 </div>
 
 ---
 
-## What this does
+## At a glance
 
-An eye-in-hand camera can reach many viewpoints, but the useful ones are constrained
-twice over: by the arm, its tool and the cell around it, and by what a sparse-view
-reconstruction can do with the images that come back. This repository connects both
-halves into one measurable pipeline.
+| | |
+|---|---|
+| **Problem** | A camera on a robot wrist can only scan from poses the arm reaches without collision. For a cell with a known model, one scan is planned once and repeated many times. Which one should be stored? |
+| **Approach** | Search a six-parameter ellipsoidal scan family on a 10,000-configuration grid, execute every candidate in a simulated UR5e cell with MoveIt 2, reconstruct the admitted scans with VGGT, register them to the reference with BUFFER-X, and score the geometry. |
+| **Outcome** | 4.32% of the grid is executable. One additional context image raises the median F1 from 0.49 to 0.79. The vertical radius of the scan decides whether a scan lands in the top decile. A threshold rule on F1 and HD95 picks the shortest scan that meets a stated requirement. |
+| **Evidence** | Every table and figure of the article is regenerated from the bundled result tables by one command, in about a minute, on a laptop. 103 automated tests, including tests that pin the published numbers. |
+| **Limits** | Simulation only, one scene, one execution per configuration. Stated in full [below](#scope-and-limits). |
 
-**(a) Scan geometry.** A scan is six numbers: two ellipsoid radii, two azimuth limits
-and two polar-parameter limits. Camera positions follow
+## Key results
+
+| Finding | Value | Where |
+|---|---|---|
+| Grid configurations admitted by the planner | 432 of 10,000 (4.32%) | [Results §1](docs/RESULTS.md#1-execution-feasibility) |
+| Recorded configurations with horizontal radius above 0.22 m or upper polar limit of 80° | none | [Results §1](docs/RESULTS.md#1-execution-feasibility) |
+| Median F1 at 20 mm, without and with the context image | 0.49 → 0.79 | [Results §2](docs/RESULTS.md#2-effect-of-the-pipeline-settings) |
+| Top-decile precision, without and with the context image | 0.71 → 0.99 | [Results §2](docs/RESULTS.md#2-effect-of-the-pipeline-settings) |
+| Top-decile recall with the context image (the limiting factor) | 0.74 | [Results §2](docs/RESULTS.md#2-effect-of-the-pipeline-settings) |
+| Separation of top and bottom F1 decile by vertical radius (Cliff's δ) | above 0.99 | [Results §3](docs/RESULTS.md#3-scan-parameters-of-the-top-and-bottom-decile) |
+| Non-dominated scans in path length and F1 above the 90th percentile | 6 of 38 | [Results §4](docs/RESULTS.md#4-path-length-and-quality) |
+| Spread of HD95 among scans whose F1 differs by less than 0.02 | 11.3 to 19.6 cm | [Results §4](docs/RESULTS.md#4-path-length-and-quality) |
+
+<p align="center">
+  <img src="study/plots/out/top_decile.png" width="100%"
+       alt="Left: F1 against recorded path length for the 38 scans of the top decile, coloured by HD95, with the non-dominated set drawn as a step line. Right: HD95 against F1 for the same scans, coloured by path length.">
+</p>
+
+## Reproduce the results
+
+No GPU, no simulator, no network access during the run.
+
+```bash
+git clone https://github.com/Adam-yes/trajectory-design-for-sparse-eye-in-hand-reconstruction
+cd trajectory-design-for-sparse-eye-in-hand-reconstruction/study
+bash run_all.sh        # Windows: run_all.bat
+```
+
+The script creates a virtual environment, installs the pinned requirements, recomputes
+the statistics, executes the plotting notebook and writes the LaTeX tables. Output goes
+to `study/results/` and `study/plots/out/`. Details: [`study/README.md`](study/README.md).
+
+## What is in this repository
+
+| Path | Content | Verified by |
+|---|---|---|
+| [`study/`](study/) | Result tables of the study, the analysis, the plotting notebook, generated figures and tables | Tests that rerun the analysis and compare with the published values; CI executes the full run |
+| [`src/eyeinhand/`](src/eyeinhand/) | Python package: scan family, frame preparation, registration composition, metrics, operating-point selection, command-line interface | 93 analytic and synthetic unit tests |
+| [`integrations/`](integrations/) | ROS 2 planning-scene and capture adapters, isolated BUFFER-X worker | Source-checked; not executed in CI (need ROS 2, MoveIt 2, GPU) |
+| [`configs/`](configs/) | Metric configuration and the collision scene of the simulated cell | Configuration tests |
+| [`docs/`](docs/) | [Results](docs/RESULTS.md), [workflow](docs/WORKFLOW.md), [data contracts](docs/CONTRACTS.md), [validation record](docs/VALIDATION.md) | |
+| [`tests/`](tests/) | Test suite | `pytest`, `ruff` in CI |
+
+## Method in brief
+
+**Scan family.** A scan is six numbers: two ellipsoid radii, two azimuth limits and two
+polar limits. Camera positions follow
 
 ```
 p(φ, θ) = c + [ r_xy·sinθ·cosφ ,  r_xy·sinθ·sinφ ,  r_z·cosθ ]
 ```
 
-with the camera always pointing at the focal target `c`, and traversal alternating
-direction on successive azimuth slices. Because `r_xy ≠ r_z`, the polar parameter `θ`
-is *not* the physical sightline inclination; the two are related by
-`β = arctan((r_xy / r_z)·tanθ)`, and the module keeps them distinct.
+with the camera pointing at the focal target `c` and the direction of travel alternating
+on successive azimuth slices. Because `r_xy ≠ r_z`, the polar parameter `θ` differs from
+the inclination of the sightline, `β = arctan((r_xy / r_z)·tanθ)`. The code keeps the two
+apart.
 
-**(b) Stages.** Every proposal is planned and collision-checked against the full cell
-before anything is recorded, so infeasible geometry never reaches the GPU. Admitted
-image sequences go to VGGT, optionally preceded by a top-down context frame. The
-prediction is registered to known reference geometry with an optional oriented
-bounding-box initializer and two BUFFER-X passes, which is what makes a metric
-comparison across runs possible at all. Evaluation then reports three quantities that
-disagree on purpose: thresholded F1, a conditional cloud-to-mesh distance, and a
-bidirectional 95th-percentile distance, alongside the recorded wrist path length.
+**Stages.** Each configuration is planned against a collision model of the cell and the
+wrist assembly. A scan is admitted when more than 75% of its path executes. Admitted
+image sets go to VGGT, optionally preceded by a fixed top-down context image. The output
+is registered to the reference geometry with an optional oriented-bounding-box
+initialization and two BUFFER-X passes.
 
-## Highlights
+**Measures.** Precision, recall and F1 at 20 mm, a cloud-to-mesh distance, the two
+directional Chamfer terms, a 95th-percentile Hausdorff distance (HD95) and the recorded
+wrist-path length. With the context image, HD95 is set by reference surface that the
+reconstruction does not cover, so it measures the extent of coverage gaps.
 
-- **Execution feasibility is treated as a first-class filter.** A 10,000-configuration
-  grid is intersected with the executable set before any viewpoint quality is compared.
-- **Reference-assisted registration is explicit.** Scale initialization and the two
-  rigid updates are composed once and validated, never applied twice.
-- **Three metrics, kept separate.** Local surface fit, coverage and boundary error are
-  reported side by side; the evaluator stores raw distance arrays, not just summaries.
-- **Deterministic selection.** Pareto dominance and threshold-based operating-point
-  selection are exact calculations over the runs you supply, with no model fitting and
-  no inferred uncertainty.
-- **Nothing is silently repaired.** Invalid points are not dropped, empty predictions
-  are not replaced with dummy geometry, failed stages do not become successes, and
-  units are never inferred.
+**Selection.** The shortest scan that satisfies a lower bound on F1 and an upper bound
+on HD95:
 
-## Install
+```python
+from eyeinhand.operating_points import load_runs, select_operating_point, RUN_COLUMNS
+
+rows = load_runs("runs/summary.csv", RUN_COLUMNS)
+best = select_operating_point(rows, min_f1=0.85, max_hd95_m=0.12)
+```
+
+## Using the pipeline on your own cell
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
 python -m pip install -e '.[analysis]'
-eyeinhand doctor
+eyeinhand doctor                      # reports which optional backends are available
+eyeinhand demo --output runs/demo.json   # end-to-end synthetic run, CPU only
 ```
 
-The core installs on CPU with NumPy, SciPy and Pillow only. Optional extras pull in
-what a given stage needs: `geometry` for Open3D and trimesh, `inference` for PyTorch,
-`dev` for the test suite. ROS 2, MoveIt 2, Isaac Sim, VGGT and BUFFER-X are external
-systems; they are imported lazily and are never bundled.
-
-## Quickstart
-
-```bash
-# 1. Inspect the geometric search space (metadata only, not feasible trajectories)
-eyeinhand grid --output runs/grid.json
-
-# 2. Build the four input manifests for one acquisition
-eyeinhand prepare-study \
-  --images captures/frame_000.png captures/frame_001.png \
-  --anchor captures/top_view.png --mask masks/gripper.png \
-  --anchor-mask masks/top_view_gripper.png \
-  --max-total-frames 21 --output runs/study_001
-
-# 3. Reconstruct, register, evaluate
-eyeinhand reconstruct --help
-eyeinhand register    --help
-eyeinhand evaluate    --help
-
-# 4. End-to-end synthetic smoke test, CPU only
-eyeinhand demo --output runs/demo.json
-```
-
-Step 2 selects exactly one context image, requires a static trajectory mask, checks
-for duplicate image bytes and counts the context frame against the total budget. The
-21-frame default is the original 20-frame trajectory cap plus one context image; it
-does not claim matched total input counts between settings. Use `--unmasked-anchor`
-only when an unobstructed top-down view is the intended policy, since a top-down view
-can contain the gripper too.
-
-## Pipeline stages
+The core needs NumPy, SciPy and Pillow. Optional extras add Open3D and trimesh
+(`geometry`), PyTorch (`inference`) and the test tools (`dev`). ROS 2, MoveIt 2, Isaac
+Sim, VGGT and BUFFER-X are external systems. They are imported lazily and are not
+bundled. The full path from a scan proposal to a selected run is described in
+[`docs/WORKFLOW.md`](docs/WORKFLOW.md).
 
 | Stage | Entry point | Requires |
 |---|---|---|
-| Trajectory family and grid enumeration | `eyeinhand.trajectory` | core |
-| Collision scene setup | `integrations/ros2_scene.py` | ROS 2, MoveIt 2 |
+| Scan family and grid enumeration | `eyeinhand.trajectory` | core |
+| Collision scene | `integrations/ros2_scene.py` | ROS 2, MoveIt 2 |
 | Image capture | `integrations/ros2_capture.py` | ROS 2 |
-| Input preparation, masking, budgeting | `eyeinhand prepare-study` | core |
-| Sparse-view reconstruction | `eyeinhand reconstruct` | VGGT, PyTorch |
-| Reference-assisted registration | `eyeinhand register` | BUFFER-X worker, Open3D |
-| Geometric evaluation | `eyeinhand evaluate` | trimesh or Open3D |
+| Frame preparation, masking, budget | `eyeinhand prepare-study` | core |
+| Reconstruction | `eyeinhand reconstruct` | VGGT, PyTorch |
+| Registration | `eyeinhand register` | BUFFER-X worker, Open3D |
+| Evaluation | `eyeinhand evaluate` | trimesh or Open3D |
 | Operating-point selection | `eyeinhand.operating_points` | core |
 
-## Collision-aware simulation setup
-
-`configs/workcell_scene.json` describes the table, the supporting frame, the
-**target-object exclusion volume** and the three attached gripper and camera boxes.
-Apply it synchronously to a simulated MoveIt planning scene:
-
-```bash
-python integrations/ros2_scene.py --simulation --config configs/workcell_scene.json
-```
-
-The command updates the planning scene and commands no robot motion. Confirm that the
-configured volumes enclose the loaded scene and the attachments before acquisition.
-The adapter adds no collision exemption for target objects, so the arm plans around
-the objects it is scanning rather than through them.
-
-## Selecting an operating point
-
-A scan family leaves you with many executable trajectories, each described by a motion
-cost and several quality measures that disagree on purpose. `eyeinhand.operating_points`
-compares such a set exactly, with no bundled data and no model fitting.
-
-```python
-from eyeinhand.operating_points import (
-    GEOMETRY_COLUMNS, RUN_COLUMNS, load_runs, nondominated_costs,
-    select_operating_point, sightline_geometry, supported_f1_length_points,
-)
-
-rows = load_runs("runs/summary.csv", RUN_COLUMNS + GEOMETRY_COLUMNS)
-
-best = select_operating_point(rows, min_f1=.85, max_hd95_m=.12)   # shortest feasible run
-front = nondominated_costs([[r["path_length_m"], -r["f1_score"], r["hd95_m"]] for r in rows])
-supported = supported_f1_length_points(rows)                      # what a weighted sum can return
-geometry = sightline_geometry(rows, focal_height_m=.04)           # real inclination, not theta
-```
-
-Two details make this worth doing explicitly. A run can be nondominated and still sit
-below the concave envelope, which means no weighted sum of cost and quality will ever
-return it at any weight; comparing `front` with `supported` is what exposes that.
-And because the manifold is an ellipsoid rather than a sphere, the polar parameter is
-not the angle the camera actually looks along, so `sightline_geometry` converts it.
-
-Choose the thresholds from the tolerance of the downstream task rather than by tuning.
-The full walkthrough, from a trajectory proposal to a selected run, is in
-[`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-
-## Repository layout
-
-| Path | Purpose |
-|---|---|
-| `src/eyeinhand/` | Geometry, trajectory family, frame preparation, registration, metrics, artifact management, operating-point selection, CLI |
-| `integrations/` | Optional ROS 2 scene and capture adapters, and the isolated BUFFER-X worker |
-| `configs/` | Metric configuration and the collision-scene description of the simulated workcell |
-| `tools/` | Renderer for the overview diagram in this README |
-| `assets/` | Generated documentation figures |
-| `examples/` | Explicitly synthetic fixture for the CPU walkthrough |
-| `tests/` | Analytic, synthetic and file-protocol tests |
-| `docs/` | Data contracts, the end-to-end workflow and the validation record |
-
-Regenerate the overview diagram after changing the stage graph or the scan geometry:
-
-```bash
-python tools/render_diagrams.py --output assets
-```
-
-## Tests and validation
+## Quality
 
 ```bash
 python -m pip install -e '.[dev,analysis]' trimesh
-python -m pytest -q
+python -m pytest -q        # 103 tests
 python -m ruff check .
 ```
 
-The suite covers geometry, metrics, artifact protocols, the registration composition
-and the operating-point selection, all with analytic or synthetic fixtures. The registration
-CLI test uses an identity-transform protocol worker; it is a file-handling and
-composition test, not a BUFFER-X benchmark. Scene tests validate the configuration and
-the target-object requirement without executing MoveIt collision checking.
-[`docs/VALIDATION.md`](docs/VALIDATION.md) records the measured coverage and states
-exactly which runtimes were never exercised.
+- The package tests use analytic and synthetic fixtures. They cover geometry, metrics,
+  file protocols, the registration composition and the selection rules.
+- The study tests rerun the analysis on the bundled tables and compare the outcome with
+  the numbers in the article.
+- CI runs both, and executes the full study including the plotting notebook.
+- [`docs/VALIDATION.md`](docs/VALIDATION.md) records what was executed and which
+  runtimes were never exercised.
 
-## Scope and limitations
+## Scope and limits
 
-Read this before drawing conclusions from anything here.
+- **Simulation.** All images are rendered. No sensor noise, no calibration error, simple
+  materials and lighting. No physical robot was run.
+- **One cell, one scene.** The executable share of the grid is a property of this arm,
+  tool and frame. The scene is a table with geometric primitives.
+- **One execution per configuration.** Run-to-run variation is not measured.
+- **Stored records.** Complete metric records exist for the top, middle and bottom F1
+  decile of each setting (38 runs each). The 10th and 90th percentiles are exact;
+  statements about runs between the stored deciles are not made.
+- **No comparison with next-best-view planners.** Those methods plan online for unknown
+  objects. This study concerns a stored scan for a known cell.
+- **Integration code.** The ROS 2 adapters and the BUFFER-X worker are not exercised by
+  the automated tests.
+- **Not a safety controller.** See [`SECURITY.md`](SECURITY.md).
 
-- The admitted fraction of any scan family is a property of a **specific cell, arm and
-  tool**. Nothing here predicts what survives collision checking in a different setup.
-- CI is infrastructure, not evidence that a robotics experiment was reproduced. The
-  test suite uses analytic and synthetic fixtures throughout.
-- The finite-set analysis supports exact dominance and threshold selection. It supports
-  no significance test, no confidence interval and no causal ranking of trajectory
-  parameters.
-- Registration uses known reference geometry to establish scale and frame. Neither
-  initializer recovers metric scale from RGB alone, and neither claims to.
-- This is research software, not a safety controller. Read
-  [`SECURITY.md`](SECURITY.md) before running external checkpoints or subprocesses.
+## Status
 
-## License and notices
-
-No blanket license has been assigned yet, so the rights holders must select and approve
-one before public distribution. [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-records the licensing status and the external systems this package integrates with but
-does not bundle. No model weights, font files or captured imagery are included.
-Contributions are welcome under the rules in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+| | |
+|---|---|
+| Version | 0.4.0, see [`CHANGELOG.md`](CHANGELOG.md) |
+| Article | Under review. Citation details are added here on publication. |
+| License | Not yet assigned. Until the rights holders choose one, no reuse rights are granted. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). |
+| Contributions | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
