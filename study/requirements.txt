@@ -1,0 +1,13 @@
+# Python 3.10 or newer. Tested with Python 3.14 on Windows 11.
+# Install:  python -m pip install -r requirements.txt
+numpy>=2.0
+scipy>=1.13
+matplotlib>=3.9
+# to execute plots/make_plots.ipynb
+nbformat>=5.10
+nbconvert>=7.16
+ipykernel>=6.29
+# for the type-size check of the figure PDFs and of the compiled paper
+pypdf>=5.0
+# only for reevaluation/reevaluate_pointclouds.py (optional, see README)
+plyfile>=1.0

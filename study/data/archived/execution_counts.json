@@ -1,0 +1,8 @@
+{
+  "source": "Archived acquisition summary of the trajectory search",
+  "planned": 10000,
+  "crash_or_error": 1746,
+  "low_completion": 7822,
+  "retained": 432,
+  "raw_run_manifest_available": false
+}

@@ -1,0 +1,14 @@
+Type size read from the figure PDFs. Body text 10 pt, required in figures 8 pt.
+5.6 pt occurs only for subscripts inside math symbols (e.g. the xy in r_xy).
+All figures are included in LaTeX at natural size (no width or scale option).
+
+candidates           text [8.0] pt, width 252.0 pt, OK
+ellipsoid            text [5.6, 8.0] pt, width 250.3 pt, OK
+f1_quantiles         text [8.0] pt, width 252.0 pt, OK
+feasibility          text [5.6, 8.0] pt, width 516.0 pt, OK
+length_model         text [8.0] pt, width 252.0 pt, OK
+parameter_contrast   text [5.6, 8.0] pt, width 252.0 pt, OK
+pipeline             text [8.0] pt, width 250.3 pt, OK
+precision_recall     text [8.0] pt, width 252.0 pt, OK
+qualitative          text [8.0] pt, width 252.0 pt, OK
+top_decile           text [8.0] pt, width 516.0 pt, OK

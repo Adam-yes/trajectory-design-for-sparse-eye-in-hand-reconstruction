@@ -1,0 +1,11 @@
+figure,text_sizes_pt,width_pt,ok
+ellipsoid,[8.0],250.3,True
+pipeline,[8.0],250.3,True
+feasibility,[8.0],516.0,True
+f1_quantiles,[8.0],252.0,True
+precision_recall,[8.0],252.0,True
+parameter_contrast,[8.0],252.0,True
+length_model,[8.0],252.0,True
+top_decile,[8.0],516.0,True
+candidates,[8.0],252.0,True
+qualitative,[8.0],252.0,True

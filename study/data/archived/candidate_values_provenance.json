@@ -1,0 +1,24 @@
+{
+  "source": "legacy/generate_plots.ipynb",
+  "cell_index": 5,
+  "kind": "saved text/html tables, not inference rerun",
+  "display_precision": {
+    "distance_m": 6,
+    "f1": 6
+  },
+  "n_unique_candidate_rows": 11,
+  "scope": "Eleven archived operating points. Not the full search dataset.",
+  "azimuth_endpoints": "Decoded from run_id using the archived sorted-key Cartesian grid; all five recorded geometric features match.",
+  "notebook_sha256": "cb5576b5e90250bd203628f2c444206b6142cc2bbab6687bead05e9090fadfc5",
+  "candidate_csv_sha256": "8632dc8235604ad8cd17d78303f0033b29d84a1a24f88ef85e747ac450df8aa7",
+  "source_outputs": [
+    {
+      "output_index": 1,
+      "html_sha256": "2cae9cbf5a3d5647e4ba6c0df60baf177e3dd4384508c257c4490f81fbb1d133"
+    },
+    {
+      "output_index": 3,
+      "html_sha256": "a35627aa07cd070bebf8062dfdd2b6c30d1c90114aeced0b7b1dd1d697327619"
+    }
+  ]
+}

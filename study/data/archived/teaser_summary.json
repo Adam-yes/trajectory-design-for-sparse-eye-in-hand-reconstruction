@@ -1,0 +1,9 @@
+{
+  "source": "Archived summary plot of the TEASER++ comparison (teaser_result_archived_plot.png, legend box). The per-run values behind the plot are not part of this package.",
+  "setting": "Both",
+  "runs_with_usable_transform": 66,
+  "median_f1_without_teaser": 0.761,
+  "median_f1_with_teaser": 0.628,
+  "median_c2m_without_teaser_m": 0.004,
+  "median_c2m_with_teaser_m": 0.014
+}
